@@ -22,9 +22,12 @@ export class MvKeycloak extends LitElement {
 
   render() {
     const { auth, authenticated, minimumValidity } = this;
-    const expired = auth.isTokenExpired(minimumValidity);
-    const valid = authenticated && !expired;
-    return valid ? html`<slot></slot>` : html`<h1>Loading...</h1>`;
+    if (auth) {
+      const expired = auth.isTokenExpired(minimumValidity);
+      const valid = authenticated && !expired;
+      return valid ? html`<slot></slot>` : html`<h1>Loading...</h1>`;
+    }
+    return html``;
   }
 
   connectedCallback() {
