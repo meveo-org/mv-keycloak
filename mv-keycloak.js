@@ -6,10 +6,11 @@ export class MvKeycloak extends LitElement {
     return {
       // the path to the keycloak.json file e.g. "./keycloak.json"
       settingsPath: { type: String, attribute: true },
-      // the number of seconds left before the token expires, default is 5
+      // the number of seconds left before the token expires, default is 10
       minimumValidity: { type: Number, attribute: true },
       auth: { type: Object, attribute: false, reflect: true },
-      authenticated: { type: Boolean, attribute: false, reflect: true }
+      authenticated: { type: Boolean, attribute: false, reflect: true },
+      offline: { type: Boolean, attribute: false, reflect: true },
     };
   }
 
@@ -17,7 +18,8 @@ export class MvKeycloak extends LitElement {
     super();
     this.auth = null;
     this.authenticated = false;
-    this.minimumValidity = 5;
+    this.minimumValidity = 10;
+    this.offline = false;
   }
 
   render() {
@@ -31,24 +33,32 @@ export class MvKeycloak extends LitElement {
   }
 
   connectedCallback() {
-    const self = this;
-    const keycloak = new Keycloak(this.settingsPath);
-    keycloak
-      .init({ onLoad: "login-required", promiseType: "native" })
-      .then(function(authenticated) {
-        if (authenticated) {
-          self.auth = keycloak;
-          self.authenticated = authenticated;
-          self.dispatchEvent(
-            new CustomEvent("auth-success", { detail: { auth: keycloak } })
-          );
-        } else {
-          self.dispatchEvent(new CustomEvent("auth-fail"));
-        }
-      })
-      .catch(function() {
-        self.dispatchEvent(new CustomEvent("auth-init-fail"));
-      });
+    const { offline } = this;
+    if (!offline) {
+      const self = this;
+      const keycloak = new Keycloak(this.settingsPath);
+      keycloak
+        .init({ onLoad: "login-required", promiseType: "native" })
+        .then(function (authenticated) {
+          if (authenticated) {
+            self.auth = keycloak;
+            self.authenticated = authenticated;
+            self.dispatchEvent(
+              new CustomEvent("auth-success", {
+                detail: { offline, auth: keycloak },
+              })
+            );
+          } else {
+            self.dispatchEvent(new CustomEvent("auth-fail"));
+          }
+        })
+        .catch(function () {
+          self.dispatchEvent(new CustomEvent("auth-init-fail"));
+        });
+    } else {
+      new CustomEvent("auth-success", { detail: { offline } });
+    }
+
     super.connectedCallback();
   }
 }

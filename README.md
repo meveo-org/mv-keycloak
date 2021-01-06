@@ -20,6 +20,7 @@ To use MvKeycloak component:
    ```html
         <mv-keycloak
             settingsPath="./keycloak.json"
+            offline  // default: false, use this attribute to disable keycloak authentication
             @auth-success="${this.handleLogin}"
             @auth-fail="${this.handleLoginFail}"
             @auth-init-fail="${this.handleLoginFail}"
