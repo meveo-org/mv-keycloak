@@ -10,7 +10,7 @@ export class MvKeycloak extends LitElement {
       minimumValidity: { type: Number, attribute: true },
       auth: { type: Object, attribute: false, reflect: true },
       authenticated: { type: Boolean, attribute: false, reflect: true },
-      offline: { type: Boolean, attribute: false, reflect: true },
+      offline: { type: Boolean },
     };
   }
 
@@ -23,13 +23,15 @@ export class MvKeycloak extends LitElement {
   }
 
   render() {
-    const { auth, authenticated, minimumValidity } = this;
+    const { auth, authenticated, minimumValidity, offline } = this;
     if (auth) {
       const expired = auth.isTokenExpired(minimumValidity);
       const valid = authenticated && !expired;
       return valid ? html`<slot></slot>` : html`<h1>Loading...</h1>`;
+    } else if (offline) {
+      return html`<slot></slot>`;
     }
-    return html``;
+    return html`<h1>Authenticating...</h1>`;
   }
 
   connectedCallback() {
@@ -56,9 +58,10 @@ export class MvKeycloak extends LitElement {
           self.dispatchEvent(new CustomEvent("auth-init-fail"));
         });
     } else {
-      new CustomEvent("auth-success", { detail: { offline } });
+      this.dispatchEvent(
+        new CustomEvent("auth-success", { detail: { offline } })
+      );
     }
-
     super.connectedCallback();
   }
 }
