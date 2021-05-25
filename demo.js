@@ -5,7 +5,7 @@ export class MvKeycloakDemo extends LitElement {
   static get properties() {
     return {
       auth: { type: Object, attribute: false, reflect: true },
-      offline: { type: Boolean, attribute: false, reflect: true },
+      failed: { type: Boolean },
     };
   }
 
@@ -20,44 +20,42 @@ export class MvKeycloakDemo extends LitElement {
 
   constructor() {
     super();
-    this.offline = true;
+    this.failed = false;
   }
 
   render() {
     return html`
       <mv-keycloak
-        ?offline="${this.offline}"
-        settingsPath="./keycloak.json"
+        settings-path="./keycloak.json"
         @auth-success="${this.handleLogin}"
         @auth-fail="${this.handleLoginFail}"
         @auth-init-fail="${this.handleLoginFail}"
       >
-        <h1>
-          This is a secure
-          page${this.offline ? html`<small> ( offline )</small>` : html``}
-        </h1>
-
+        <h1>This is a secure page</h1>
         <button @click="${this.handleLogout}">Logout</button>
+        <div slot="loading">This message is shown while loading...</div>
+        <div slot="authenticating">
+          This message is shown while authenticating...
+        </div>
+        <div slot="failed">This message is shown when authentication fails</div>
       </mv-keycloak>
     `;
   }
 
   handleLogin(event) {
     const {
-      detail: { auth, offline },
+      detail: { auth },
     } = event;
     this.auth = auth;
-    this.offline = offline;
-    console.log("this.auth: ", auth);
-    console.log("this.offline: ", offline);
   }
 
   handleLoginFail() {
     this.auth = null;
+    this.failed = true;
   }
 
   handleLogout() {
-    if (!this.offline) {
+    if (!!this.auth) {
       this.auth.logout();
     }
   }

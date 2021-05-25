@@ -1,67 +1,72 @@
 import { LitElement, html, css } from "lit-element";
-import "./keycloak.js";
+import "./keycloak.min.js";
 
 export class MvKeycloak extends LitElement {
   static get properties() {
     return {
       // the path to the keycloak.json file e.g. "./keycloak.json"
-      settingsPath: { type: String, attribute: true },
+      settingsPath: { type: String, attribute: "settings-path", reflect: true },
       // the number of seconds left before the token expires, default is 10
-      minimumValidity: { type: Number, attribute: true },
+      minValidity: { type: Number, attribute: "min-validity", reflect: true },
       auth: { type: Object, attribute: false, reflect: true },
       authenticated: { type: Boolean, attribute: false, reflect: true },
-      offline: { type: Boolean },
+      failed: { type: Boolean, attribute: false, reflect: true },
     };
   }
 
   constructor() {
     super();
+    this.settingsPath = "./keycloak.json";
     this.auth = null;
     this.authenticated = false;
-    this.minimumValidity = 10;
-    this.offline = false;
+    this.failed = false;
+    this.minValidity = 10;
   }
 
   render() {
-    const { auth, authenticated, minimumValidity, offline } = this;
+    const { auth, authenticated, failed, minValidity } = this;
     if (auth) {
-      const expired = auth.isTokenExpired(minimumValidity);
+      const expired = auth.isTokenExpired(minValidity);
       const valid = authenticated && !expired;
-      return valid ? html`<slot></slot>` : html`<h1>Loading...</h1>`;
-    } else if (offline) {
-      return html`<slot></slot>`;
+      return valid
+        ? html`<slot></slot>`
+        : html`<slot name="loading"><b>Loading...</b></slot>`;
     }
-    return html`<h1>Authenticating...</h1>`;
+    if (failed) {
+      return html`<slot name="failed"><b>Authentication failed</b></slot>`;
+    }
+    return html`
+      <slot name="authenticating">
+        <b>Authenticating...</b>
+      </slot>
+    `;
   }
 
   connectedCallback() {
-    const { offline } = this;
-    if (!offline) {
-      const self = this;
-      const keycloak = new Keycloak(this.settingsPath);
-      keycloak
-        .init({ onLoad: "login-required", promiseType: "native" })
-        .then(function (authenticated) {
-          if (authenticated) {
-            self.auth = keycloak;
-            self.authenticated = authenticated;
-            self.dispatchEvent(
-              new CustomEvent("auth-success", {
-                detail: { offline, auth: keycloak },
-              })
-            );
-          } else {
-            self.dispatchEvent(new CustomEvent("auth-fail"));
-          }
-        })
-        .catch(function () {
-          self.dispatchEvent(new CustomEvent("auth-init-fail"));
-        });
-    } else {
-      this.dispatchEvent(
-        new CustomEvent("auth-success", { detail: { offline } })
-      );
-    }
+    const self = this;
+    const keycloak = new Keycloak(this.settingsPath);
+    keycloak
+      .init({ onLoad: "login-required", promiseType: "native" })
+      .then(function (authenticated) {
+        if (authenticated) {
+          self.failed = false;
+          self.auth = keycloak;
+          self.authenticated = authenticated;
+          self.dispatchEvent(
+            new CustomEvent("auth-success", {
+              detail: { auth: keycloak },
+            })
+          );
+        } else {
+          self.failed = true;
+          self.dispatchEvent(new CustomEvent("auth-fail"));
+        }
+      })
+      .catch(function () {
+        self.failed = true;
+        self.dispatchEvent(new CustomEvent("auth-init-fail"));
+      });
+
     super.connectedCallback();
   }
 }

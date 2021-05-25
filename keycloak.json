@@ -1,6 +1,6 @@
 {
   "realm": "meveo",
-  "auth-server-url": "http://192.168.99.100:8080/auth",
+  "auth-server-url": "http://localhost:8081/auth/",
   "ssl-required": "external",
   "resource": "meveo-web",
   "verify-token-audience": true,
