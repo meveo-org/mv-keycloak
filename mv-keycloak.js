@@ -46,7 +46,7 @@ export class MvKeycloak extends LitElement {
     const self = this;
     const keycloak = new Keycloak(this.settingsPath);
     keycloak
-      .init({ onLoad: "login-required", promiseType: "native" })
+      .init({ onLoad: "login-required", promiseType: "native", "checkLoginIframe": false })
       .then(function (authenticated) {
         if (authenticated) {
           self.failed = false;
