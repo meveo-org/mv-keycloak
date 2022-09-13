@@ -1,6 +1,6 @@
 {
   "name": "@meveo-org/mv-keycloak",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MvKeycloak is a Meveo component (based on lit-element) that allows meveo page components to be secured by [Keycloak](https://www.keycloak.org/).",
   "main": "mv-keycloak.js",
   "scripts": {
