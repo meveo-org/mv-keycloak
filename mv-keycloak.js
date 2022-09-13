@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html } from "lit";
 import "./keycloak.min.js";
 
 export class MvKeycloak extends LitElement {
