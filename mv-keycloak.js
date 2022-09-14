@@ -1,5 +1,5 @@
 import { LitElement, html } from "lit";
-import "./keycloak.min.js";
+import Keycloak from "keycloak-js";
 
 export class MvKeycloak extends LitElement {
   static get properties() {
